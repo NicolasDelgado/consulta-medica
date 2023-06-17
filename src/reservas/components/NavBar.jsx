@@ -3,14 +3,19 @@ import {AppBar, Box, Button, Container, Grid, IconButton, Menu, MenuItem, Toolba
 import MenuIcon from '@mui/icons-material/Menu';
 import { useTheme, useMediaQuery } from "@material-ui/core";
 import "@fontsource/arimo";
+import { useState } from 'react';
 import { Navigate, useNavigate } from 'react-router-dom';
+import { useAuthStore } from '../../hook';
 
 const pages = ['Products', 'Pricing', 'Blog'];
 const settings = ['Iniciar Sesión', 'Crear Cuenta'];
+const settings2 = ['Cerrar Sesión'];
 
-export const HeaderApp = () => {
-  const [anchorElNav, setAnchorElNav] = React.useState(null);
-  const [anchorElUser, setAnchorElUser] = React.useState(null);
+export const NavBar = () => {
+  const [anchorElNav, setAnchorElNav] = useState(null);
+  const [anchorElUser, setAnchorElUser] = useState(null);
+
+  const {status} = useAuthStore();  
 
   const navigate = useNavigate();
 
@@ -30,19 +35,29 @@ export const HeaderApp = () => {
     const texto = event.nativeEvent.target.outerText;
 
     if(texto === 'Iniciar Sesión'){
-      navigate("/", {
+      navigate("/auth/login", {
         replace:true
       });
     }else{
-      navigate("/registro-cuenta", {
-        replace:true
-      });
-    }
+      if(texto === 'Cerrar Sesión'){
+        
+        navigate("", {
+          replace:true
+        });
+      }
+      
+      else{
+        navigate("/registro-cuenta", {
+          replace:true
+        });
+      }
+    } 
   };
 
   const theme = useTheme();
   const esPantallaPequena = useMediaQuery(theme.breakpoints.down("xs"));
 
+  console.log("ccaaaa: "+ status);
 
   return (
 
@@ -59,11 +74,12 @@ export const HeaderApp = () => {
           !esPantallaPequena &&
             <Box component="img" 
                  sx={{align: { md: 'left' },
-                      maxHeight:{ xs: 133,   md: 67 },
+                      maxHeight:{ xs: 125,   md: 50 },
                       maxWidth: { xs: 250,    md: 200 },
+                      margin: 1,
                       display:  { xs: 'none', md: 'flex' }
                   }}
-                  src={`../../src/imagen/logo_centro_awn.png?w=100&fit=crop&auto=format`}
+                  src={`../../src/imagen/logo.png?w=100&fit=crop&auto=format`}
             />
         }
             <Box sx={{display: { xs: 'flex', md: 'none' },
@@ -73,7 +89,7 @@ export const HeaderApp = () => {
                           aria-label="account of current user"
                           aria-controls="menu-appbar"
                           aria-haspopup="true"
-                          onClick={handleOpenNavMenu}
+                          onClick={handleOpenNavMenu}      
                           color="inherit">
 
                 <MenuIcon />
@@ -108,9 +124,9 @@ export const HeaderApp = () => {
                     display: { xs: 'flex', md: 'none'}}}>
 
           <Box component="img" 
-               sx={{width: 150,
-                    height: 70}}
-               src={`../../src/imagen/logo_centro_awn.png?w=100&fit=crop&auto=format`}/>
+               sx={{width: 130,
+                    height: 50}}
+               src={`../../src/imagen/logo.png?w=100&fit=crop&auto=format`}/>
           </Box>
          
 
@@ -136,11 +152,20 @@ export const HeaderApp = () => {
                         open={Boolean(anchorElUser)}
                         onClose={handleCloseUserMenu}>
 
-                        {settings.map((setting) => (
+                        { (status !== 'checking')?
+                        
+                        settings.map((setting) => (
                           <MenuItem key={setting} onClick={handleCloseUserMenu}>
                             <Typography textAlign="center" sx={{fontFamily: "Arimo"}}>{setting}</Typography>
                           </MenuItem>
-                        ))}
+                        )):
+                        settings2.map((setting2) => (
+                          <MenuItem key={setting2} onClick={handleCloseUserMenu}>
+                            <Typography textAlign="center" sx={{fontFamily: "Arimo"}}>{setting2}</Typography>
+                          </MenuItem>
+                        ))
+                        
+                        }
 
                   </Menu>
               

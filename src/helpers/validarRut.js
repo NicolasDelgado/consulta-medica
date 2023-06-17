@@ -1,5 +1,3 @@
-import React from 'react'
-
 let validarDV = (rut) => {
     var M=0,S=1;
     for(;rut;rut=Math.floor(rut/10))

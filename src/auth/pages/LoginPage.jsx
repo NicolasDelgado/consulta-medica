@@ -1,10 +1,15 @@
+import { useEffect, useState} from "react";
 import { Formik, Form, Field } from 'formik';
-import { Button, Card, CardActions, CardContent, CardHeader, Grid } from '@mui/material';
+import { Button, Card, CardActions, CardContent, CardHeader, Grid,Alert, Stack as StackMUI} from '@mui/material';
 import { makeStyles } from "@material-ui/core";
 import * as Yup from "yup"
 import { TextField } from "formik-material-ui"
-import { validarRut } from '../../helpers';
+import { validarRut, expresionesRegulares } from '../../helpers';
+import Swal from 'sweetalert2'; 
 import { Stack } from '@mui/system';
+import { useNavigate } from 'react-router-dom';
+import { useAuthStore } from '../../hook';
+
 
 const useStyle = makeStyles((theme) => ({
   padding: {
@@ -12,38 +17,75 @@ const useStyle = makeStyles((theme) => ({
   }
 }))
 
-const initialValues = { rut: '', 
+const {lowercaseRegEx, uppercaseRegEx,numericRegEx,lengthRegEx} = expresionesRegulares();
+
+const initialValues = { email: '', 
                         password: ''}
-                        
-const lowercaseRegEx = /(?=.*[a-z])/
-const uppercaseRegEx = /(?=.*[A-Z])/
-const numericRegEx = /(?=.*[0-9])/
-const lengthRegEx = /(?=.{6,})/
+
+
+
 
 export const LoginPage = () => {
   
+  const { startLogin,limpiarMesaje, errorMessage,resultado} = useAuthStore();  
+
+  const [ estadoMensaje, setEstadoMensaje] = useState(false);  
+  const [ mensaje, setMensaje] = useState(''); 
+
+  useEffect(() => {
+    if(resultado !== undefined){
+      setEstadoMensaje(true);  
+      setMensaje(resultado.descripcion);
+      limpiarMesaje();
+    }else{
+      setEstadoMensaje(false);
+      setMensaje('');
+      console.log('Aqui');      
+    }
+  }, [resultado])
+  
+  const navigate = useNavigate();
  
   const classes = useStyle();
 
-  const onSubmit = (values) => {
-    console.log(values)
+  const onSubmit = ({email,password}, {resetForm}) => {
+    startLogin({'email':email , 'password': password});
+    if(errorMessage !== undefined){
+      resetForm({values: ''});
+    }else{
+      navigate('/restablecer-cuenta', {
+        replace:true
+      });  
+    }
   }
 
+  useEffect(() => {
+    if(errorMessage !== undefined){
+      Swal.fire('Error en la autenticacion', errorMessage, 'error');
+
+    }
+  }, [errorMessage])
+
+  const onClickRestablecerCuenta = (event) => {
+    event.preventDefault();
+    navigate('/restablecer-cuenta', {
+      replace:true
+    });    
+  }
+
+  const onClickRegistrarCuenta = (event) => {
+    event.preventDefault();
+    navigate('/registro-cuenta', {
+      replace:true
+    });    
+  }
+  
+
+
   const validationSchema = Yup.object().shape({
-    rut:Yup.string()
-      .test('validator-rut', function (value) {
-        const validation = validarRut(value);
-        if (!validation.isValid) {
-          return this.createError({
-            path: this.path,
-            message: validation.errorMessage,
-          });
-        }
-        else {
-          return true;
-        }
-      }
-    ),    
+    email: Yup.string()  
+              .email('Invalid email')
+              .required("Este campo es obligatorio"),
     password: Yup.string()
       .matches(
         lowercaseRegEx,
@@ -58,18 +100,26 @@ export const LoginPage = () => {
       .required("Este campo es obligatorio"),
   })
 
+  
+
   return (       
+   
     <Grid container
           spacing={1}
-          sx = {{marginTop: {xs: 0, md:2},marginLeft: {xs: 3},marginRight: {xs: 3}, width:{xs: '90%'}}}
+          sx = {{marginTop: {xs: 0, md:2},
+                 marginLeft: {xs: 3},
+                 marginRight: {xs: 3}, 
+                 width:{xs: '90%'}}}
           direction="column"
           alignItems="center"
           alignSelf="center"
           justifySelf="center"
-          justifyContent="center" height='100%'>
+          justifyContent="center" 
+          height='100%'>
 
         <Grid item 
               xs={3}>
+
 
           <Card className={classes.padding}>
             
@@ -77,6 +127,11 @@ export const LoginPage = () => {
                              color: '#4d0c1c'}} 
                         align="center" 
                         title="Iniciar Sesión" />
+            
+            { estadoMensaje && <StackMUI sx={{ width: '100%' }} spacing={2}>
+              <Alert severity="success"><strong>{mensaje}</strong></Alert>
+            </StackMUI>}
+
 
             <Formik initialValues={initialValues}
                     validationSchema={validationSchema}
@@ -91,13 +146,13 @@ export const LoginPage = () => {
                               spacing={1} 
                               justify="center">
                           
-                          <Field label="Rut"
-                                 variant="outlined"
+                          <Field label = "Email"
+                                 variant = "outlined"
                                  fullWidth
-                                 name="rut"
+                                 name = "email"
                                  sx = {{marginTop: 2}}
-                                 value={values.rut}                              
-                                 component={TextField}/>      
+                                 value = {values.email}                              
+                                 component = {TextField}/>  
                           
                           <Field  label="Password"
                                   variant="outlined"
@@ -131,7 +186,11 @@ export const LoginPage = () => {
                           Ingresar
                         </Button>
 
-                        <Stack direction="row" xs={2} spacing={2}  sx={{mt:3}} width='100%'>
+                        <Stack direction="row" 
+                               xs={2} 
+                               spacing={2}  
+                               sx={{mt:3}} 
+                               width='100%'>
                           <Button color = "primary"
                                   variant = "outlined"
                                   style = {{ align:'right', 
@@ -139,8 +198,8 @@ export const LoginPage = () => {
                                              width:'46%',
                                              height:40,
                                              textTransform: 'none'}}
-                                  href= '/registro-cuenta'>
-                                 
+                                  type="Submit"
+                                  onClick={onClickRegistrarCuenta} >                                 
                               Crear Cuenta
                             </Button>
 
@@ -152,16 +211,16 @@ export const LoginPage = () => {
                                             width:'46%',
                                             height:40,
                                             textTransform: 'none'}}
-                                    href= '/restablecer-cuenta'>
+                                    type="Submit"
+                                    onClick={onClickRestablecerCuenta}>
                               Restablecer Cuenta
                             </Button>
+
                            </Stack>
                         
                         </Stack>
-                       
-                
+                                       
                       </CardActions>
-
                       
                     </Form>
                   )
