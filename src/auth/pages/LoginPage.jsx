@@ -32,6 +32,8 @@ export const LoginPage = () => {
   const [ estadoMensaje, setEstadoMensaje] = useState(false);  
   const [ mensaje, setMensaje] = useState(''); 
 
+  const [ mensaje2, setMensaje2] = useState(''); 
+
   useEffect(() => {
     if(resultado !== undefined){
       setEstadoMensaje(true);  
